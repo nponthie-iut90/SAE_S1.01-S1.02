@@ -26,11 +26,11 @@ public class DosSend {
      * @param path the path of the wav file to create
      */
     public DosSend(String path) {
-        File file = new File(path);
+        File file = new File(path); // Création d un nouvel objet fichier à partir du chemin spécifié
         try {
-            outStream = new FileOutputStream(file);
+            outStream = new FileOutputStream(file); //Initialise un flux de sortie vers le fichier
         } catch (Exception e) {
-            System.out.println("Erreur de création du fichier");
+            System.out.println("Erreur de création du fichier"); // Affiche un message d'erreur
         }
     }
 
@@ -70,9 +70,9 @@ public class DosSend {
             writeLittleEndian(1, 2, outStream); // Format PCM
             writeLittleEndian(CHANNELS, 2, outStream);
             writeLittleEndian(FECH, 4, outStream);
-            writeLittleEndian(FECH * CHANNELS * FMT / 8, 4, outStream); // Byte rate
-            writeLittleEndian(CHANNELS * FMT / 8, 2, outStream); // Block align
-            writeLittleEndian(FMT, 2, outStream); // Bits per sample
+            writeLittleEndian(FECH * CHANNELS * FMT / 8, 4, outStream); // Taux d'octets par seconde (byte rate)
+            writeLittleEndian(CHANNELS * FMT / 8, 2, outStream); // Alignement des blocs (block align)
+            writeLittleEndian(FMT, 2, outStream); // Bits par échantillon (bits per sample)
             outStream.write(new byte[] { 'd', 'a', 't', 'a' });
             writeLittleEndian((int) nbBytes, 4, outStream); // Taille des données
 
@@ -114,9 +114,9 @@ public class DosSend {
      * @return the number of characters read
      */
     public int readTextData() {
-        String message = input.nextLine();
-        dataChar = message.toCharArray();
-        return dataChar.length;
+        String message = input.nextLine(); // Lecture du message entré par l'utilisateur
+        dataChar = message.toCharArray(); // Conversion du message en tableau de caractères
+        return dataChar.length; // Renvoie de la longueur du tableau de caractères
     }
 
     /**
@@ -126,12 +126,12 @@ public class DosSend {
      * @return byte array containing only 0 & 1
      */
     public byte[] charToBits(char[] chars) {
-        int totalBits = chars.length * 8 + START_SEQ.length;
-        byte[] result = new byte[totalBits];
+        int totalBits = chars.length * 8 + START_SEQ.length; // Calcul du nombre total de bits
+        byte[] result = new byte[totalBits]; // Initialisation du tableau pour stocker les bits
 
         // Ajouter la séquence de départ
         for (int i = 0; i < START_SEQ.length; i++) {
-            result[i] = (byte) START_SEQ[i];
+            result[i] = (byte) START_SEQ[i]; // Ajout de la séquence de départ dans le résultat
         }
 
         // Convertir les caractères en bits
@@ -142,7 +142,7 @@ public class DosSend {
             }
         }
 
-        return result;
+        return result; // Renvoie le tableau contenant les bits convertis
     }
 
     /**
@@ -151,16 +151,16 @@ public class DosSend {
      * @param bits the data to modulate
      */
     public void modulateData(byte[] bits) {
-        dataMod = new double[bits.length * FECH / BAUDS]; // Initialiser dataMod
+        dataMod = new double[bits.length * FECH / BAUDS]; // Initialisation de dataMod
 
-        // Fréquence angulaire de la porteuse
+        // Calcul de la fréquence angulaire de la porteuse
         double omegaP = 2 * Math.PI * FP / FECH;
 
-        // Modulation ASK
+        // Modulation ASK (Amplitude Shift Keying)
         for (int i = 0; i < bits.length; i++) {
             double amplitude = bits[i] == 1 ? 1.0 : 0.0; // 1 correspond à une amplitude maximale, 0 correspond à aucune amplitude
             for (int j = 0; j < FECH / BAUDS; j++) {
-                dataMod[i * FECH / BAUDS + j] = amplitude * Math.sin(omegaP * j);
+                dataMod[i * FECH / BAUDS + j] = amplitude * Math.sin(omegaP * j); // Modulation de l'amplitude de la porteuse
             }
         }
     }
@@ -175,34 +175,34 @@ public class DosSend {
      * @param title the title of the window
      */
     public static void displaySig(double[] sig, int start, int stop, String mode, String title) {
-        StdDraw.setCanvasSize(800, 400);
-        StdDraw.setXscale(start, stop);
-        StdDraw.setYscale(-1.1, 1.1);
-        StdDraw.setTitle(title);
+        StdDraw.setCanvasSize(800, 400); // Définition de la taille du canvas
+        StdDraw.setXscale(start, stop); // Définition de l'échelle sur l'axe x
+        StdDraw.setYscale(-1.1, 1.1); // Définition de l'échelle sur l'axe y
+        StdDraw.setTitle(title); // Définition du titre de la fenêtre
 
         // Affichage de l'échelle de graduation sur l'axe x
         for (int i = start; i <= stop; i += (stop - start) / 10) {
-            StdDraw.text(i, -1.0, String.valueOf(i));
-            StdDraw.line(i, -0.02, i, 0.02);
+            StdDraw.text(i, -1.0, String.valueOf(i)); // Affichage des valeurs sur l'axe x
+            StdDraw.line(i, -0.02, i, 0.02); // Affichage des traits de graduation sur l'axe x
         }
 
-        // Ajout de la ligne bleue au milieu de la fenêtre graphique
-        StdDraw.setPenColor(StdDraw.BLUE);
-        StdDraw.setPenRadius(0.005);
-        StdDraw.line(start, 0, stop, 0);
+        // Ajout d'une ligne bleue au milieu de la fenêtre graphique
+        StdDraw.setPenColor(StdDraw.BLUE); // Définition de la couleur du stylo
+        StdDraw.setPenRadius(0.005); // Définition de l'épaisseur du trait
+        StdDraw.line(start, 0, stop, 0); // Dessin de la ligne horizontale bleue
 
         if (mode.equals("line")) {
             // Affichage du signal sous forme de ligne
             for (int i = start; i < stop - 1; i++) {
-                StdDraw.line(i, sig[i], i + 1, sig[i + 1]);
+                StdDraw.line(i, sig[i], (double) i + 1, sig[i + 1]); // Dessin de la ligne entre deux points successifs
             }
         } else if (mode.equals("point")) {
             // Affichage du signal sous forme de points
             for (int i = start; i < stop; i++) {
-                StdDraw.point(i, sig[i]);
+                StdDraw.point(i, sig[i]); // Dessin d'un point pour chaque échantillon du signal
             }
         } else {
-            System.out.println("Mode non pris en charge");
+            System.out.println("Mode non pris en charge"); // Affichage d'un message si le mode n'est pas reconnu
         }
     }
 
@@ -225,7 +225,7 @@ public class DosSend {
         DosSend dosSend = new DosSend("DosOok_message.wav");
         // lit le texte à envoyer depuis l'entrée standard
         // et calcule la durée de l'audio correspondant
-        dosSend.duree = (double) (dosSend.readTextData() + dosSend.START_SEQ.length / 8) * 8.0 / dosSend.BAUDS;
+        dosSend.duree = (dosSend.readTextData() + (double) dosSend.START_SEQ.length / 8) * 8.0 / dosSend.BAUDS;
         // génère le signal modulé après avoir converti les données en bits
         dosSend.modulateData(dosSend.charToBits(dosSend.dataChar));
         // écrit l'entête du fichier wav
